@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title> Steel Rate Calculator</title>
+    <link rel="icon" type="image/png" href="calci.png">
+
+
+<style>
+body {
+    font-family: Arial, sans-serif;
+    background: #eef1f6;
+    padding: 20px;
+}
+.container {
+    max-width: 600px;
+    margin: auto;
+    background: white;
+    padding: 25px;
+    border-radius: 20px;
+    box-shadow: 0px 0px 15px rgba(0,0,0,0.15);
+}
+h2 {
+    text-align: center;
+    margin-bottom: 20px;
+    background: #007bff;
+    color: white;
+    padding: 10px;
+    border-radius: 10px;
+}
+label {
+    font-size: 19px;
+    margin-top: 15px;
+    display: block;
+}
+input, select {
+    width: 95%;
+    padding: 14px;
+    font-size: 18px;
+    margin-top: 5px;
+    border-radius: 12px;
+    border: 1px solid #bbb;
+    background: #f8f8f8;
+}
+select{
+    width: 100%;
+    padding: 14px;
+    font-size: 18px;
+    margin-top: 5px;
+    border-radius: 12px;
+    border: 1px solid #bbb;
+    background: #f8f8f8;
+}
+button {
+    width: 100%;
+    padding: 15px;
+    margin-top: 20px;
+    font-size: 20px;
+    background: #007bff;
+    color: white;
+    border: none;
+    border-radius: 12px;
+    cursor: pointer;
+}
+button:hover {
+    background: #005fcb;
+}
+.toggle-box {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    margin-bottom: 15px;
+}
+.lang-btn {
+    padding: 10px 18px;
+    background: #ddd;
+    border-radius: 10px;
+    font-size: 17px;
+    cursor: pointer;
+}
+.lang-btn.active {
+    background: #007bff;
+    color: white;
+}
+.result-card {
+    margin-top: 20px;
+    padding: 20px;
+    border-radius: 15px;
+    background: #f0fff4;
+    border: 2px solid #26c75f;
+    font-size: 20px;
+}
+.rate-item {
+    font-weight: bold;
+    margin-bottom: 10px;
+}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+    <div class="toggle-box">
+        <div class="lang-btn active" onclick="setLang('en')">English</div>
+        <div class="lang-btn" onclick="setLang('hi')">हिंदी</div>
+        <div class="lang-btn" onclick="setLang('mr')">मराठी</div>
+    </div>
+
+    <h2 id="title">Steel Rate Calculator</h2>
+
+    <label id="lblSize">Steel Size</label>
+    <select id="size">
+        <option value="8">8 mm</option>
+        <option value="10">10 mm</option>
+        <option value="12">12 mm</option>
+        <option value="16">16 mm</option>
+        <option value="20">20 mm</option>
+        <option value="32">32 mm</option>
+    </select>
+
+    <label id="lblCompany">Today's Company Rate (₹ per ton)</label>
+    <input type="number" id="companyRate">
+
+    <label id="lblTransport">Transport Charges (₹)</label>
+    <input type="number" id="transport">
+
+    <label id="lblQty">Quantity (Ton)</label>
+    <input type="number" id="qty" value="1">
+
+    <label id="lblW">W Rate Deduction (₹)</label>
+    <input type="number" id="wDeduction" value="3500">
+
+    <label id="lblCD">CD Discount (%)</label>
+    <input type="number" id="cdDiscount" value="1.5">
+
+    <button onclick="calculate()" id="btnCalc">Calculate</button>
+
+    <div id="result" class="result-card" style="display:none;">
+        <div class="rate-item" id="txtBasic">Bill Rate: ₹ <span id="basicRate"></span></div>
+        <div class="rate-item" id="txtWRate">Without Rate: ₹ <span id="wRate"></span></div>
+        <div class="rate-item" id="txtCDRate">CD Rate: ₹ <span id="cdRate"></span></div>
+    </div>
+
+</div>
+
+<script>
+let finalData = {};
+
+function calculate() {
+    let size = document.getElementById("size").value;
+    let rate = Number(document.getElementById("companyRate").value);
+    let transport = Number(document.getElementById("transport").value);
+    let qty = Number(document.getElementById("qty").value);
+    let wDeduct = Number(document.getElementById("wDeduction").value);
+    let cd = Number(document.getElementById("cdDiscount").value);
+
+    let making = size == "8" ? 6500 : 5500;
+    let labour = 140;
+    let loading = 200;
+
+    let baseAmount = (rate + making + labour) * qty;
+    let gstAmount = baseAmount * 0.18;
+    let afterGST = baseAmount + gstAmount;
+    let basicTotal = afterGST + transport + loading;
+
+    let wCompanyRate = rate - wDeduct;
+    let wBase = (wCompanyRate + making + labour) * qty;
+    let wGST = wBase * 0.18;
+    let wRate = wBase + wGST + transport + loading;
+
+    let cdAmount = afterGST * cd / 100;
+    let cdRate = (afterGST - cdAmount) + transport + loading;
+
+    document.getElementById("basicRate").innerText = basicTotal.toFixed(2);
+    document.getElementById("wRate").innerText = wRate.toFixed(2);
+    document.getElementById("cdRate").innerText = cdRate.toFixed(2);
+
+    finalData = { size, qty, rate, making, labour, transport, loading, baseAmount, gstAmount, afterGST, basicTotal, wCompanyRate, wBase, wGST, wRate, cdAmount, cd, cdRate };
+    document.getElementById("result").style.display = "block";
+}
+
+function setLang(lang) {
+    // Remove active class from all buttons
+    document.querySelectorAll('.lang-btn').forEach(btn => btn.classList.remove('active'));
+    document.querySelector(`.lang-btn[onclick="setLang('${lang}')"]`).classList.add('active');
+
+    if(lang === 'en') {
+        document.getElementById('title').innerText = 'Steel Rate Calculator';
+        document.getElementById('lblSize').innerText = 'Steel Size';
+        document.getElementById('lblCompany').innerText = "Today's Company Rate (₹ per ton)";
+        document.getElementById('lblTransport').innerText = 'Transport Charges (₹)';
+        document.getElementById('lblQty').innerText = 'Quantity (Ton)';
+        document.getElementById('lblW').innerText = 'W Rate Deduction (₹)';
+        document.getElementById('lblCD').innerText = 'CD Discount (%)';
+        document.getElementById('btnCalc').innerText = 'Calculate';
+    }
+    else if(lang === 'hi') {
+        document.getElementById('title').innerText = 'स्टील रेट कैलकुलेटर';
+        document.getElementById('lblSize').innerText = 'स्टील का आकार';
+        document.getElementById('lblCompany').innerText = 'आज का कंपनी रेट (₹ प्रति टन)';
+        document.getElementById('lblTransport').innerText = 'ट्रांसपोर्ट चार्जेस (₹)';
+        document.getElementById('lblQty').innerText = 'मात्रा (टन)';
+        document.getElementById('lblW').innerText = 'W रेट कटौती (₹)';
+        document.getElementById('lblCD').innerText = 'CD छूट (%)';
+        document.getElementById('btnCalc').innerText = 'गणना करें';
+    }
+    else if(lang === 'mr') {
+        document.getElementById('title').innerText = 'स्टील दर गणक';
+        document.getElementById('lblSize').innerText = 'स्टील आकार';
+        document.getElementById('lblCompany').innerText = 'आजची कंपनी दर (₹ प्रति टन)';
+        document.getElementById('lblTransport').innerText = 'वाहतूक शुल्क (₹)';
+        document.getElementById('lblQty').innerText = 'प्रमाण (टन)';
+        document.getElementById('lblW').innerText = 'W दर कपात (₹)';
+        document.getElementById('lblCD').innerText = 'CD सवलत (%)';
+        document.getElementById('btnCalc').innerText = 'गणना करा';
+    }
+}
+</script>
+
+</body>
+</html>
